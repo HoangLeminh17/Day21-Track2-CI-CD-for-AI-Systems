@@ -6,9 +6,10 @@
 Trong buoc 1, em su dung `RandomForestClassifier` va chay nhieu thi nghiem voi cac bo sieu tham so khac nhau tren MLflow de so sanh chat luong mo hinh. Sau khi thu nghiem, bo tham so tot nhat duoc dung cho pipeline la:
 
 ```yaml
-n_estimators: 200
-max_depth: 10
-min_samples_split: 5
+n_estimators: 500
+max_depth: 20
+min_samples_split: 2
+max_features: log2
 ```
 
 Mo hinh duoc luu vao `models/model.pkl`, dong thoi cac chi so `accuracy` va `f1_score` duoc ghi vao `outputs/metrics.json` de phuc vu CI/CD.
