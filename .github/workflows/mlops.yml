@@ -30,9 +30,12 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Install DVC and AWS CLI
+        run: pip install "dvc[s3]" awscli
+
       - name: Run unit tests
         # TODO 1: Viet lenh de chay pytest tren thu muc tests/ voi co -v
-        run: # <dien lenh o day>
+        run: pytest -v tests/
 
 
   # ---------------------------------------------------------------------------
@@ -65,12 +68,16 @@ jobs:
         #        echo "AWS_SECRET_ACCESS_KEY=..." >> $GITHUB_ENV
         # Azure: echo "AZURE_STORAGE_CONNECTION_STRING=..." >> $GITHUB_ENV
         run: |
-          # <dien code o day>
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
+          echo "CLOUD_BUCKET=${{ secrets.CLOUD_BUCKET }}" >> $GITHUB_ENV
+          echo "AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }}" >> $GITHUB_ENV
 
       - name: Pull data with DVC
         # TODO 3: Pull cac file du lieu can thiet tu cloud storage bang lenh dvc pull.
         #         Chi pull train_phase1.csv va eval.csv (khong can train_phase2.csv).
-        run: # <dien lenh o day>
+        run: |
+          dvc pull data/train_phase1.csv data/eval.csv
 
       - name: Train model
         run: python src/train.py
@@ -84,16 +91,16 @@ jobs:
         #   ACC=$(python -c "import json; d=json.load(open('outputs/metrics.json')); print(d['accuracy'])")
         #   echo "accuracy=$ACC" >> $GITHUB_OUTPUT
         run: |
-          # <dien code o day>
+          ACC=$(python -c "import json; d=json.load(open('outputs/metrics.json')); print(d['accuracy'])")
+          echo "accuracy=$ACC" >> $GITHUB_OUTPUT
 
       - name: Upload model to Cloud Storage
         # TODO 5: Su dung cloud SDK de upload models/model.pkl len
         #         <bucket>/models/latest/model.pkl.
         #         Ten bucket lay tu secret CLOUD_BUCKET.
         run: |
-          python - <<'EOF'
-          # <dien code Python o day>
-          EOF
+          aws --version || pip install awscli
+          aws s3 cp models/model.pkl s3://$CLOUD_BUCKET/models/latest/model.pkl
 
       - name: Save metrics as artifact
         uses: actions/upload-artifact@v4
@@ -126,8 +133,13 @@ jobs:
         #   print("PASSED: dang trien khai model.")
         run: |
           python - <<'EOF'
-          # <dien code Python o day>
-          EOF
+import sys
+acc = float("${{ needs.train.outputs.accuracy }}")
+if acc < 0.70:
+    print(f"FAILED: accuracy {acc:.4f} < 0.70. Huy deploy.")
+    sys.exit(1)
+print(f"PASSED: accuracy {acc:.4f} >= 0.70. Proceed to deploy.")
+EOF
 
 
   # ---------------------------------------------------------------------------
@@ -148,12 +160,13 @@ jobs:
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
-            # TODO 7: Restart service mlops-serve tren VM.
-            # TODO 8: Cho server san sang roi goi curl /health de xac nhan.
-            #         Neu health check that bai sau nhieu lan thu, thoat voi exit 1.
-            #
-            # Goi y:
-            #   sudo systemctl restart mlops-serve
-            #   sleep 5
-            #   curl -sf http://localhost:8000/health && echo "Health check passed." || exit 1
-            # <dien lenh bash o day>
+            sudo systemctl restart mlops-serve || true
+            attempts=0
+            until curl -sf http://localhost:8000/health; do
+              attempts=$((attempts+1))
+              if [ $attempts -ge 6 ]; then
+                echo "Health check failed after $attempts attempts."; exit 1
+              fi
+              sleep 5
+            done
+            echo "Health check passed."
