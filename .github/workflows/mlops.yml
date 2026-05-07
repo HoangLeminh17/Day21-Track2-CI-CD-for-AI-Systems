@@ -133,13 +133,13 @@ jobs:
         #   print("PASSED: dang trien khai model.")
         run: |
           python - <<'EOF'
-import sys
-acc = float("${{ needs.train.outputs.accuracy }}")
-if acc < 0.70:
-    print(f"FAILED: accuracy {acc:.4f} < 0.70. Huy deploy.")
-    sys.exit(1)
-print(f"PASSED: accuracy {acc:.4f} >= 0.70. Proceed to deploy.")
-EOF
+          import sys
+          acc = float("${{ needs.train.outputs.accuracy }}")
+          if acc < 0.70:
+              print(f"FAILED: accuracy {acc:.4f} < 0.70. Huy deploy.")
+              sys.exit(1)
+          print(f"PASSED: accuracy {acc:.4f} >= 0.70. Proceed to deploy.")
+          EOF
 
 
   # ---------------------------------------------------------------------------
