@@ -23,19 +23,18 @@ def download_model():
     try:
         s3.download_file(CLOUD_BUCKET, S3_MODEL_KEY, MODEL_PATH)
         print(f"Model downloaded from s3://{CLOUD_BUCKET}/{S3_MODEL_KEY} to {MODEL_PATH}")
-    except botocore.exceptions.ClientError as e:
-        print(f"Could not download model from S3: {e}")
+    except botocore.exceptions.ClientError as exc:
+        print(f"Could not download model from S3: {exc}")
 
 
-# Try to download model at startup
 download_model()
 
 model = None
 if os.path.exists(MODEL_PATH):
     try:
         model = joblib.load(MODEL_PATH)
-    except Exception as e:
-        print(f"Failed to load model: {e}")
+    except Exception as exc:
+        print(f"Failed to load model: {exc}")
 
 
 class PredictRequest(BaseModel):
@@ -44,9 +43,8 @@ class PredictRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    """Return server health. If model missing, status indicates so."""
     if model is None:
-        return {"status": "no_model"}
+        raise HTTPException(status_code=503, detail="Model not loaded")
     return {"status": "ok"}
 
 
@@ -55,15 +53,16 @@ def predict(req: PredictRequest):
     if model is None:
         raise HTTPException(status_code=503, detail="Model not loaded")
 
-    if not isinstance(req.features, list) or len(req.features) != 12:
+    if len(req.features) != 12:
         raise HTTPException(status_code=400, detail="Expected 12 features (wine quality)")
 
     try:
-        pred = model.predict([req.features])[0]
-        label_map = {0: "thấp", 1: "trung_bình", 2: "cao"}
-        return {"prediction": int(pred), "label": label_map.get(int(pred), "khong_ro")}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        pred = int(model.predict([req.features])[0])
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    label_map = {0: "thap", 1: "trung_binh", 2: "cao"}
+    return {"prediction": pred, "label": label_map.get(pred, "khong_ro")}
 
 
 if __name__ == "__main__":
