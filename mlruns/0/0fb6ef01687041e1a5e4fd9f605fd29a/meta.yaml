@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/My%20Asus/Desktop/AI_thucchien/Day21-Track2-CI-CD-for-AI-Systems/mlruns/0/0fb6ef01687041e1a5e4fd9f605fd29a/artifacts
+end_time: 1778169954550
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 0fb6ef01687041e1a5e4fd9f605fd29a
+run_name: salty-mole-689
+run_uuid: 0fb6ef01687041e1a5e4fd9f605fd29a
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1778169951978
+status: 3
+tags: []
+user_id: My Asus

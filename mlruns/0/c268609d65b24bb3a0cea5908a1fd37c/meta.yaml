@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/My%20Asus/Desktop/AI_thucchien/Day21-Track2-CI-CD-for-AI-Systems/mlruns/0/c268609d65b24bb3a0cea5908a1fd37c/artifacts
+end_time: 1778169963690
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: c268609d65b24bb3a0cea5908a1fd37c
+run_name: skillful-finch-996
+run_uuid: c268609d65b24bb3a0cea5908a1fd37c
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1778169959616
+status: 3
+tags: []
+user_id: My Asus
